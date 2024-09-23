@@ -18,13 +18,13 @@
 
 using SeqType=int64_t;
 struct Seq{
-  int64_t val,step;
-  int64_t next1; //val
-  int64_t next2; //val+step
+  SeqType val,step;
+  SeqType next1; //val
+  SeqType next2; //val+step
 
 
   //Note: validate after creation
-  Seq(int64_t _val, int64_t _step):
+  Seq(SeqType _val, SeqType _step):
     val(_val),step(_step),
     next1(_val),next2(_val+_step)
   {}
@@ -34,12 +34,16 @@ struct Seq{
   }
 
   //suggest IsValid
-  int64_t GetNext(){
-    int64_t ret = next1;
+  SeqType GetNext(){
+    SeqType ret = next1;
     next1 = next2;
     next2 = ret + next2;
-    //TODO check overflow and
     // 3 При переполнении счетчика подпоследовательность должна начинаться сначала;
+    // Note: limit to 31/63 bit int
+    if(next1<0){
+      next1 = val;
+      next2 = val+step;
+    }
     return ret;
   }
 };
@@ -55,10 +59,12 @@ int process_string(std::string& s){
 
 
 int main(){
-  Seq se(0x7FFFFFFF,0x7FFFFFFF);
-  printf("%llx\n",se.GetNext());
-  printf("%llx\n",se.GetNext());
-  printf("%llx\n",se.GetNext());
+  Seq se(0x7FFFFFF8,0x2);
+  //Seq se(2,3);
+  printf("%16.16llx\n",se.GetNext());
+  printf("%16.16llx\n",se.GetNext());
+  printf("%16.16llx\n",se.GetNext());
+  printf("%16.16llx\n",se.GetNext());
   return 0;
 }
 
