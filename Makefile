@@ -58,6 +58,13 @@ test:
 	 } | ./single
 
 
+asan:
+	CXXFLAGS='-fsanitize=address -fsanitize=leak -fsanitize=undefined' \
+	LDFLAGS='-fsanitize=address -fsanitize=leak -fsanitize=undefined' \
+	$(MAKE) default_target
+	$(MAKE) test
+
+
 # checks the executable and symlinks to the output
 .PHONY: all
 all: $(BIN_PATH)/$(BIN_NAME)
@@ -68,7 +75,7 @@ all: $(BIN_PATH)/$(BIN_NAME)
 # Creation of the executable
 $(BIN_PATH)/$(BIN_NAME): $(OBJECTS)
 	@echo "Linking: $@"
-	$(CXX) $(OBJECTS) -o $@ ${LIBS}
+	$(CXX) $(OBJECTS) $(LDFLAGS) -o $@ ${LIBS}
 
 # Add dependency files, if they exist
 -include $(DEPS)
