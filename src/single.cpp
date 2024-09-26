@@ -1,5 +1,7 @@
-#include <stdio.h>
 #include <string>
+#include <tuple>
+#include <array>
+#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -24,6 +26,11 @@ struct Seq{
   SeqType next1; //val
   SeqType next2; //val+step
 
+
+  Seq():
+    val(0),step(0),
+    next1(0),next2(0)
+  {}
 
   //Note: validate after creation
   Seq(SeqType _val, SeqType _step):
@@ -51,8 +58,13 @@ struct Seq{
 };
 
 
+enum Cmd{
+  failed  = 0,
+  get_seq = 1,
+  req     = 2
+};
 
-int process_string(std::string& s){
+auto process_string(std::string& s){
  //1 req1 a b (задать начальное значение = a и шаг = b для первой подпоследовательности);
  //4 get seq - выдавать в сокет каждому клиенту сгенерированную последовательность.
 
@@ -63,8 +75,8 @@ int process_string(std::string& s){
 
   got=sscanf(s.c_str(),"%9s %9s",cmd,args);
   if(got==2 && !strcmp(cmd,"get") && !strcmp(args,"seq")){
-      printf("seq\n");
-      return 1;
+    printf("seq\n");
+    return std::make_tuple(get_seq,0,0,0);
   }
   got=sscanf(s.c_str(),"%9s %d %d",cmd,&arg1,&arg2);
   if(got == 3 
@@ -74,17 +86,18 @@ int process_string(std::string& s){
   ){
     arg0=cmd[3]-'0';
     printf("req %d %d %d\n",arg0, arg1, arg2);
-    return 2;
+    return std::make_tuple(req, arg0, arg1, arg2);
   }
   printf("failed  %s %d %d %d %d\n",cmd, got, arg0 ,arg1, arg2);
-  return 0;
+  return std::make_tuple(failed,0,0,0);
 }
 
 
 
-int main(int argc, char* argv[]){
+int main(int , char* []){
   std::string ss;
   int res;
+  std::array<Seq,3> se;
   do{
     char* s=NULL;
     size_t l=0;
@@ -100,17 +113,19 @@ int main(int argc, char* argv[]){
       printf ("getline EOF\n");
       return 0;
     }
-    res = process_string(ss);
-    if(res == 2){
-      Seq se(2,3);
-      printf("%16.16llx\n",se.GetNext());
-      printf("%16.16llx\n",se.GetNext());
-      printf("%16.16llx\n",se.GetNext());
-      printf("%16.16llx\n",se.GetNext());
-      printf("%16.16llx\n",se.GetNext());
+    auto [res, seqno, start, step] = process_string(ss);
+    if(res == req){
+      se[seqno-1]={start,step};
+    }
+    if(res == get_seq){
+      printf("%16.16llx\n",se[0].GetNext());
+      printf("%16.16llx\n",se[0].GetNext());
+      printf("%16.16llx\n",se[0].GetNext());
+      printf("%16.16llx\n",se[0].GetNext());
+      printf("%16.16llx\n",se[0].GetNext());
     }
   }while(res);
-  Seq se(0x7FFFFFF8,0x2);
+  //Seq se(0x7FFFFFF8,0x2);
   //Seq se(2,3);
   return 0;
 }
