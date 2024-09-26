@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <string>
+#include <string.h>
+#include <ctype.h>
 
 
 
@@ -51,20 +53,65 @@ struct Seq{
 
 
 int process_string(std::string& s){
+ //1 req1 a b (задать начальное значение = a и шаг = b для первой подпоследовательности);
+ //4 get seq - выдавать в сокет каждому клиенту сгенерированную последовательность.
 
-  //sscanf(s.c_str(),"%s",cmd);
+  char cmd[10];
+  char args[10];
+  int arg0,arg1,arg2;
+  int got;
+
+  got=sscanf(s.c_str(),"%9s %9s",cmd,args);
+  if(got==2 && !strcmp(cmd,"get") && !strcmp(args,"seq")){
+      printf("seq\n");
+      return 1;
+  }
+  got=sscanf(s.c_str(),"%9s %d %d",cmd,&arg1,&arg2);
+  if(got == 3 
+    && !strncmp(cmd,"req",3)
+    && cmd[3] >= '1' && cmd[3] <= '3'
+    && cmd[4] == '\0'
+  ){
+    arg0=cmd[3]-'0';
+    printf("req %d %d %d\n",arg0, arg1, arg2);
+    return 2;
+  }
+  printf("failed  %s %d %d %d %d\n",cmd, got, arg0 ,arg1, arg2);
   return 0;
 }
 
 
 
-int main(){
+int main(int argc, char* argv[]){
+  std::string ss;
+  int res;
+  do{
+    char* s=NULL;
+    size_t l=0;
+    errno=0;
+    res=getdelim(&s,&l,'\n',stdin);
+    ss=s;
+    free(s);
+    if(res<0){
+      if(errno){
+	perror("getline: ");
+	return 1;
+      }
+      printf ("getline EOF\n");
+      return 0;
+    }
+    res = process_string(ss);
+    if(res == 2){
+      Seq se(2,3);
+      printf("%16.16llx\n",se.GetNext());
+      printf("%16.16llx\n",se.GetNext());
+      printf("%16.16llx\n",se.GetNext());
+      printf("%16.16llx\n",se.GetNext());
+      printf("%16.16llx\n",se.GetNext());
+    }
+  }while(res);
   Seq se(0x7FFFFFF8,0x2);
   //Seq se(2,3);
-  printf("%16.16llx\n",se.GetNext());
-  printf("%16.16llx\n",se.GetNext());
-  printf("%16.16llx\n",se.GetNext());
-  printf("%16.16llx\n",se.GetNext());
   return 0;
 }
 
