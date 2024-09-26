@@ -73,7 +73,7 @@ enum Cmd{
   req     = 2
 };
 
-auto process_string(std::string& s){
+auto process_string(const char* s){
  //1 req1 a b (задать начальное значение = a и шаг = b для первой подпоследовательности);
  //4 get seq - выдавать в сокет каждому клиенту сгенерированную последовательность.
 
@@ -82,12 +82,12 @@ auto process_string(std::string& s){
   int arg0,arg1,arg2;
   int got;
 
-  got=sscanf(s.c_str(),"%9s %9s",cmd,args);
+  got=sscanf(s, "%9s %9s", cmd, args);
   if(got==2 && !strcmp(cmd,"get") && !strcmp(args,"seq")){
     printf("seq\n");
     return std::make_tuple(get_seq,0,0,0);
   }
-  got=sscanf(s.c_str(),"%9s %d %d",cmd,&arg1,&arg2);
+  got=sscanf(s, "%9s %d %d", cmd, &arg1, &arg2);
   if(got == 3 
     && !strncmp(cmd,"req",3)
     && cmd[3] >= '1' && cmd[3] <= '3'
@@ -112,30 +112,28 @@ int main(int , char* []){
     size_t l=0;
     errno=0;
     res=getdelim(&s,&l,'\n',stdin);
-    ss=s;
-    free(s);
     if(res<0){
       if(errno){
 	perror("getline: ");
+	free(s);
 	return 1;
       }
       printf ("getline EOF\n");
+      free(s);
       return 0;
     }
-    auto [res, seqno, start, step] = process_string(ss);
+    auto [res, seqno, start, step] = process_string(s);
+    free(s);
     if(res == req){
       se[seqno-1]={start,step};
     }
     if(res == get_seq){
-      printf("%16.16llx\n",se[0].GetNext());
-      printf("%16.16llx\n",se[0].GetNext());
-      printf("%16.16llx\n",se[0].GetNext());
-      printf("%16.16llx\n",se[0].GetNext());
-      printf("%16.16llx\n",se[0].GetNext());
+      for(int i =0; i<5; i++)
+	for(auto& v:se)
+	  if(v.IsValid())
+	    printf("%016llx\n",v.GetNext());
     }
   }while(res);
-  //Seq se(0x7FFFFFF8,0x2);
-  //Seq se(2,3);
   return 0;
 }
 
