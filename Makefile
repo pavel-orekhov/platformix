@@ -24,7 +24,7 @@ OBJECTS = $(SOURCES:$(SRC_PATH)/%.$(SRC_EXT)=$(BUILD_PATH)/%.o)
 DEPS = $(OBJECTS:.o=.d)
 
 # flags #
-COMPILE_FLAGS = -Wall -Wextra -g
+COMPILE_FLAGS = -Wall -Wextra -g -std=c++17
 INCLUDES = -I include/ -I /usr/local/include
 # Space-separated pkg-config libraries used by this project
 LIBS =
@@ -51,6 +51,12 @@ clean:
 	@echo "Deleting directories"
 	@$(RM) -r $(BUILD_PATH)
 	@$(RM) -r $(BIN_PATH)
+
+test:
+	 { echo "  req2    2   4"; echo req3 3 2; echo get seq; \
+	   echo "req2 0 0"; echo get seq; \
+	 } | ./single
+
 
 # checks the executable and symlinks to the output
 .PHONY: all

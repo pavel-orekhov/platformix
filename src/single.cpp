@@ -19,6 +19,15 @@
 
  */
 
+/*
+ Usage/some test case:
+ see also: make test
+ { echo "  req2    2   4"; echo req3 3 2; echo get seq; \
+   echo "req2 0 0"; echo get seq; 
+ } | ./single
+
+ */
+
 
 using SeqType=int64_t;
 struct Seq{
